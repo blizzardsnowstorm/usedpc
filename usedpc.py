@@ -15,6 +15,12 @@ def slowprint(text, delay=0.015):
         sys.stdout.flush()
         time.sleep(delay)
     sys.stdout.write("\n")
+def realslowprint(text, delay=0.5):
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(delay)
+    sys.stdout.write("\n")
 def clearscreen():
     os.system('cls' if os.name == 'nt' else 'clear')
 def enterprompt(prompt="[Press ENTER to continue...]"):
@@ -40,7 +46,7 @@ slowprint("Waking LAN adapter ... [OK]")
 slowprint("Starting Input Listener Service ... [RESTARTING]")
 slowprint("Running [R E A P E R] integrity check ... [DONE]")
 time.sleep(1)
-
+clearscreen()
 username = input("Create a username: ")
 password = pwinput.pwinput("create a password: ")
 p2 = pwinput.pwinput("confirm password: ")
@@ -48,7 +54,9 @@ if p2 == password:
     print("password confirmed")
 else:
     print("incorrect password")
-
+clearscreen()
+slowprint("Loading OS")
+realslowprint("[#####################]")
 
 
 
