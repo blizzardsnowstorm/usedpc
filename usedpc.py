@@ -42,13 +42,12 @@ slowprint("Running [R E A P E R] integrity check ... [DONE]")
 time.sleep(1)
 
 username = input("Create a username: ")
-password = pw.input("create a password: ")
-p2 = pw.input("confirm password: ")
+password = pwinput.pwinput("create a password: ")
+p2 = pwinput.pwinput("confirm password: ")
 if p2 == password:
     print("password confirmed")
 else:
     print("incorrect password")
-
 
 
 
