@@ -1,4 +1,5 @@
 #skeleton
+#basic, text, terminal, game
 import pwinput
 import sys
 import time
