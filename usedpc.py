@@ -1,6 +1,6 @@
-#skeleton
-#basic, text, terminal, game
-#another test
+# skeleton
+# basic, text, terminal, game
+# another test
 import pwinput
 import sys
 import time
@@ -9,6 +9,21 @@ import colorama
 import os
 import json
 import shutil
+
+# -------------------------------------------------------------------
+# DICTS
+# ------------------------------------------------------------------
+accounts = {
+    "bank": {},
+    "email": {}
+}
+websites = {
+    "hackers.org": "hackerssite",
+    "bank.com": "banksite",
+    "email.com": "emailsite",
+    "shop.com": "shopsite",
+    "computers.edu": "computersedusite"
+}
 
 # -------------------------------------------------------------------
 # VIRTUAL FILESYSTEM
@@ -26,8 +41,9 @@ VIRTUALFS = {
                         "type": "file",
                         "owner": "user",
                         "content": (
-                            "1. Find out who REAPER is.\n"
-                            "2. Fix the terminal output.\n"
+                            "1. Customize your OS.\n"
+                            "2. Explore the filesystem.\n"
+                            "3. Connect to a website.\n"
                         )
                     }
                 }
@@ -53,14 +69,20 @@ VIRTUALFS = {
         }
     },
 
-    "reaper": {
+    "var": {
         "type": "dir",
         "owner": "root",
         "contents": {
-            "secretfile.enc": {
-                "type": "file",
-                "owner": "reaper",
-                "content": "Q1J5cHRpYyBFbmNvZGVkIERhdGEgLi4u"
+            "log": {
+                "type": "dir",
+                "owner": "root",
+                "contents": {
+                    "boot.log": {
+                        "type": "file",
+                        "owner": "root",
+                        "content": "System boot completed successfully."
+                    }
+                }
             }
         }
     }
@@ -112,6 +134,113 @@ def enterprompt(prompt="[Press ENTER to continue...]"):
     print()
 
 
+# -----------------------
+# WEBSITE HANDLERS
+# -----------------------
+def handleemail(gamestate):
+    slowprint("Connecting to email.com...")
+    time.sleep(1)
+    slowprint("Welcome to email.com")
+    print("1) Login")
+    print("2) Create Account")
+    choice = input("> ").strip()
+
+    if choice == "2":
+        username = input("Choose an email address: ").strip()
+        if not username:
+            slowprint("Invalid username.")
+            return
+        if username in accounts["email"]:
+            slowprint("Email account already exists.")
+            return
+        password = pwinput.pwinput("Create a password: ")
+        accounts["email"][username] = {
+            "password": password,
+            "inbox": ["Welcome to email.com!"]
+        }
+        slowprint("Email account created!")
+        return
+
+    elif choice == "1":
+        username = input("Email username: ").strip()
+        password = pwinput.pwinput("Password: ")
+
+        if username in accounts["email"] and accounts["email"][username]["password"] == password:
+            slowprint("Login successful. Inbox:")
+            inbox = accounts["email"][username]["inbox"]
+            if not inbox:
+                print("(empty)")
+            else:
+                for i, msg in enumerate(inbox, 1):
+                    print(f"{i}. {msg}")
+        else:
+            slowprint("Invalid credentials.")
+    else:
+        slowprint("Canceled.")
+
+
+def handlebank(gamestate):
+    slowprint("Connecting to bank.com...")
+    time.sleep(1)
+
+    slowprint("Welcome to the Bank.")
+    print("1) Login")
+    print("2) Create Account")
+    choice = input("> ").strip()
+
+    if choice == "2":
+        username = input("Choose a username: ").strip()
+        if not username:
+            slowprint("Invalid username.")
+            return
+        if username in accounts["bank"]:
+            slowprint("Account already exists.")
+            return
+
+        password = pwinput.pwinput("Choose a password: ")
+        accounts["bank"][username] = {
+            "password": password,
+            "balance": 100  # starting balance
+        }
+        slowprint("Account created! Starting balance: $100")
+        return
+
+    elif choice == "1":
+        username = input("Username: ").strip()
+        password = pwinput.pwinput("Password: ")
+
+        if username in accounts["bank"] and accounts["bank"][username]["password"] == password:
+            slowprint("Login successful.")
+            bal = accounts["bank"][username]["balance"]
+            slowprint(f"Your current balance is: ${bal}")
+            # small bank menu
+            while True:
+                print("\nBank menu:")
+                print("  1) Deposit $10")
+                print("  2) Withdraw $10")
+                print("  3) Logout")
+                sel = input("> ").strip()
+                if sel == "1":
+                    accounts["bank"][username]["balance"] += 10
+                    slowprint(f"Deposited $10. New balance: ${accounts['bank'][username]['balance']}")
+                elif sel == "2":
+                    if accounts["bank"][username]["balance"] >= 10:
+                        accounts["bank"][username]["balance"] -= 10
+                        slowprint(f"Withdrew $10. New balance: ${accounts['bank'][username]['balance']}")
+                    else:
+                        slowprint("Insufficient funds.")
+                elif sel == "3":
+                    slowprint("Logging out of bank.")
+                    break
+                else:
+                    slowprint("Invalid choice.")
+        else:
+            slowprint("Invalid credentials.")
+            return
+    else:
+        slowprint("Canceled.")
+
+
 # -------------------------------------------------------------------
 # COMMANDS
 # -------------------------------------------------------------------
@@ -119,8 +248,11 @@ def exitcommand(gamestate, args):
     slowprint("Logging off...")
     gamestate["running"] = False
 
+
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+
 def helpcommand(gamestate, args):
     print("Available commands:")
     print("  help        Show this help list.")
@@ -128,6 +260,27 @@ def helpcommand(gamestate, args):
     print("  ls          List files and directories.")
     print("  cd <dir>    Change directory.")
     print("  cat <file>  View a file.")
+    print("  wget <host> Connect to a website (e.g. wget bank.com)")
+
+
+def wgetcommand(gamestate, args):
+    if not args:
+        slowprint("wget: missing arguments: provide URL")
+        slowprint("Try 'wget computers.edu'")
+        return
+    targeturl = args[0]
+    if targeturl in websites:
+        sitetype = websites[targeturl]
+        slowprint(f"Connecting to {targeturl}...")
+        time.sleep(1)
+        if sitetype == "banksite":
+            handlebank(gamestate)
+        elif sitetype == "emailsite":
+            handleemail(gamestate)
+        else:
+            slowprint(f"Connected to {targeturl} — nothing interesting here.")
+    else:
+        slowprint(f"Error: Could not resolve host {targeturl}. Unknown domain.")
 
 
 def lscommand(gamestate, args):
@@ -252,7 +405,8 @@ def initializegamestate(username, password):
             "ls": lscommand,
             "cd": cdcommand,
             "cat": catcommand,
-            "clear": lambda gs, args: clear()
+            "clear": lambda gs, args: clear(),
+            "wget": wgetcommand
         }
     }
 
@@ -320,12 +474,14 @@ def main():
     slowprint("Loading Kernel 5.4.0-lowpower...")
     slowprint("Initializing disk cache...           [OK]")
     slowprint("Waking LAN adapter...                [OK]")
-    slowprint("Starting Input Listener Service...   [RESTARTING]")
-    slowprint("Running REAPER integrity check...    [DONE]")
+    slowprint("Starting Input Listener Service...   [OK]")
+    slowprint("Running filesystem integrity check... [OK]")
     time.sleep(1)
 
     clearscreen()
-    username = input("Create a username: ")
+    username = input("Create a username: ").strip()
+    if not username:
+        username = "player"
 
     while True:
         pw1 = pwinput.pwinput("Create a password: ")
